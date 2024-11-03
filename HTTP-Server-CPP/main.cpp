@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
+#include <sstream>
 
 int main(int argc, const char * argv[]) {
     
@@ -65,13 +66,60 @@ int main(int argc, const char * argv[]) {
         close(server_fd);
         return -1;
         
+    }// after accepting connection lets parse incoming request
+    
+    // read and parse client request
+    
+    char buffer[1024] = {0};
+    read(new_socket, buffer, 1024);
+    std::cout << "Request:\n" << buffer << "\n";
+    // extract http method and path
+    
+    std :: string request(buffer);
+    std:: string method,path;
+    
+    std::istringstream request_stream(request);
+    request_stream >> method >> path;
+    std::cout << "Method : " << method << " , Path : " << path << "\n";
+    
+    // implement basic routing
+    
+    std::string response;
+
+    if (method == "GET" && path == "/") {
+        response = "HTTP/1.1 200 OK\r\n"
+                   "Content-Type: text/plain\r\n"
+                   "Content-Length: 19\r\n"
+                   "\r\n"
+                   "Welcome to the server!";
+    } else if (method == "GET" && path == "/hello") {
+        response = "HTTP/1.1 200 OK\r\n"
+                   "Content-Type: text/plain\r\n"
+                   "Content-Length: 13\r\n"
+                   "\r\n"
+                   "Hello, World!";
+    } else {
+        response = "HTTP/1.1 404 Not Found\r\n"
+                   "Content-Type: text/plain\r\n"
+                   "Content-Length: 9\r\n"
+                   "\r\n"
+                   "Not Found";
     }
+    
+    
     
     // send HTTP response to the client
     
-    const std::string response = "HTTP/1.1 2-- OK\r\nContent-Type ; text/plain\r\n\r\nHello, World!";
+    // 8. Send an HTTP response using std::string
+//    const std::string response = "HTTP/1.1 200 OK\r\n"
+//                           "Content-Type: text/plain\r\n"
+//                           "Content-Length: 13\r\n"   // Length of "Hello, World!"
+//                           "\r\n"
+//                           "Hello, World!";
+
+    
     send(new_socket, response.c_str(), response.length(), 0); // convert std::string to const char* as it is needed in the send function
-    std::cout << "Hello message sent\n";
+    std::cout << "Response sent : \n" << response << "\n";
     
     // closing the sockets :
     
